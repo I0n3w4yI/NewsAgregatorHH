@@ -1,20 +1,32 @@
 import { Search, ChevronDown } from 'lucide-react';
 import { FilterState } from '../types/news';
-import { CategoryStructure } from '../types/categories';
+import { CategoryStructure, ApiCategory } from '../types/categories';
 import { useState } from 'react';
 
 interface NewsFiltersProps {
   filters: FilterState;
   onFiltersChange: (filters: FilterState) => void;
   categories: CategoryStructure[];
+  apiCategories?: ApiCategory[]; // Добавляем API категории для отображения количества новостей
 }
 
 export function NewsFilters({
   filters,
   onFiltersChange,
-  categories
+  categories,
+  apiCategories
 }: NewsFiltersProps) {
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+
+  // Функция для получения количества новостей в категории
+  const getCategoryNewsCount = (categoryName: string): number => {
+    if (!apiCategories) return 0;
+    
+    // Находим оригинальное название категории (с маленькой буквы)
+    const originalCategoryName = categoryName.charAt(0).toLowerCase() + categoryName.slice(1);
+    const apiCategory = apiCategories.find(cat => cat.category === originalCategoryName);
+    return apiCategory?.news_count || 0;
+  };
 
   const toggleCategory = (categoryName: string) => {
     setExpandedCategories((prev) =>
@@ -28,11 +40,14 @@ export function NewsFilters({
     const category = categories.find(cat => cat.name === categoryName);
     const hasSubcategories = category?.subcategories && category.subcategories.length > 0;
     
+    // Преобразуем название категории обратно в оригинальный формат (с маленькой буквы) для API
+    const originalCategoryName = categoryName.charAt(0).toLowerCase() + categoryName.slice(1);
+    
     // Toggle category selection
-    const isSelected = filters.selectedCategories.includes(categoryName);
+    const isSelected = filters.selectedCategories.includes(originalCategoryName);
     const newSelectedCategories = isSelected
-      ? filters.selectedCategories.filter(cat => cat !== categoryName)
-      : [...filters.selectedCategories, categoryName];
+      ? filters.selectedCategories.filter(cat => cat !== originalCategoryName)
+      : [...filters.selectedCategories, originalCategoryName];
     
     // Handle subcategories based on category selection
     let newSelectedSubcategories = [...filters.selectedSubcategories];
@@ -158,7 +173,9 @@ export function NewsFilters({
         <div className="space-y-1">
           {categories.map((category) => {
             const isExpanded = expandedCategories.includes(category.name);
-            const isCategorySelected = filters.selectedCategories.includes(category.name);
+            // Преобразуем название категории в оригинальный формат для проверки выбранности
+            const originalCategoryName = category.name.charAt(0).toLowerCase() + category.name.slice(1);
+            const isCategorySelected = filters.selectedCategories.includes(originalCategoryName);
             const hasSubcategories = category.subcategories && category.subcategories.length > 0;
 
             return (
@@ -195,9 +212,12 @@ export function NewsFilters({
                     </button>
                     <button
                       onClick={() => handleCategoryHeaderClick(category.name)}
-                      className="text-left flex-1 hover:text-[var(--text-primary)] transition-colors"
+                      className="text-left flex-1 hover:text-[var(--text-primary)] transition-colors flex items-center justify-between"
                     >
-                      {category.name}
+                      <span>{category.name}</span>
+                      <span className="text-xs text-[var(--text-tertiary)] ml-2">
+                        ({getCategoryNewsCount(category.name)})
+                      </span>
                     </button>
                   </div>
                   {hasSubcategories && (

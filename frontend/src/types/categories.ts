@@ -3,6 +3,14 @@ export interface CategoryStructure {
   subcategories?: string[];
 }
 
+// Интерфейс для категорий из API
+export interface ApiCategory {
+  category: string;
+  count: number;
+  news_count: number;
+}
+
+// Старые статические категории (для fallback)
 export const categoriesData: CategoryStructure[] = [
   {
     name: 'Спорт',
@@ -44,4 +52,18 @@ export const categoriesData: CategoryStructure[] = [
     subcategories: []
   }
 ];
+
+// Функция для преобразования API категорий в структуру для UI
+export function transformApiCategories(apiCategories: ApiCategory[]): CategoryStructure[] {
+  return apiCategories.map(apiCategory => ({
+    name: capitalizeFirstLetter(apiCategory.category),
+    subcategories: [] // API не предоставляет подкатегории, поэтому оставляем пустым
+  }));
+}
+
+// Функция для капитализации первой буквы
+function capitalizeFirstLetter(str: string): string {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 

@@ -2,45 +2,33 @@ import { Newspaper } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { NewsCard } from './components/NewsCard';
 import { NewsFilters } from './components/NewsFilters';
-import { NewsModal } from './components/NewsModal';
 import { Pagination } from './components/Pagination';
 import { RefreshDropdown } from './components/RefreshDropdown';
-import { ViewToggle, ViewMode } from './components/ViewToggle';
 import { ThemeToggle } from './components/ThemeToggle';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
-import { useNewsFilters } from './hooks/useNewsFilters';
+import { useNewsFiltersWithApi } from './hooks/useNewsFiltersWithApi';
 import { useAutoRefresh } from './hooks/useAutoRefresh';
-import { mockNewsData } from './data/mockData';
-import { NewsItem } from './types/news';
 
 function App() {
   const { theme, setTheme } = useTheme();
-  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPageTransitioning, setIsPageTransitioning] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   const {
     filters,
     onFiltersChange,
     categories,
+    apiCategories,
     paginatedNews,
     currentPage,
     totalPages,
     onPageChange,
     onRefresh,
-    totalResults
-  } = useNewsFilters(mockNewsData, viewMode);
-
-  const handleOpenModal = (news: NewsItem) => {
-    setSelectedNews(news);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedNews(null);
-  };
+    onUpdateNews,
+    totalResults,
+    loading,
+    error,
+    isUpdating
+  } = useNewsFiltersWithApi();
 
   // Анимация переключения страниц
   const handlePageChangeWithAnimation = (page: number) => {
@@ -82,16 +70,12 @@ function App() {
                 currentTheme={theme}
                 onThemeChange={setTheme}
               />
-              <ViewToggle
-                currentView={viewMode}
-                onViewChange={setViewMode}
-              />
               <RefreshDropdown
                 value={filters.refreshInterval}
                 onChange={(value) => onFiltersChange({ ...filters, refreshInterval: value })}
                 timeUntilRefresh={timeUntilRefresh}
                 isRefreshing={isRefreshing}
-                onManualRefresh={onRefresh}
+                onManualRefresh={onUpdateNews}
               />
             </div>
           </div>
@@ -102,26 +86,42 @@ function App() {
                 filters={filters}
                 onFiltersChange={onFiltersChange}
                 categories={categories}
+                apiCategories={apiCategories}
               />
             </aside>
 
             <main className="flex-1 min-w-0 relative">
               <div className="mb-3 text-[var(--text-tertiary)] text-sm mt-3">
                 Найдено новостей: {totalResults}
+                {loading && <span className="ml-2 text-blue-500">Загрузка...</span>}
+                {error && <span className="ml-2 text-red-500">Ошибка: {error}</span>}
+                {isUpdating && <span className="ml-2 text-yellow-500">Обновление...</span>}
               </div>
 
-              {paginatedNews.length === 0 ? (
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-16 min-h-[600px]">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--text-primary)]"></div>
+                  <p className="text-[var(--text-tertiary)] text-lg text-center mt-4">Загрузка новостей...</p>
+                </div>
+              ) : error ? (
+                <div className="flex flex-col items-center justify-center py-16 min-h-[600px]">
+                  <p className="text-red-500 text-lg text-center">Ошибка загрузки новостей</p>
+                  <p className="text-[var(--text-tertiary)] mt-2 text-center">{error}</p>
+                  <button
+                    onClick={onRefresh}
+                    className="mt-4 px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-lg text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+                  >
+                    Попробовать снова
+                  </button>
+                </div>
+              ) : paginatedNews.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 min-h-[600px]">
                   <p className="text-[var(--text-tertiary)] text-lg text-center">Новости не найдены</p>
                   <p className="text-[var(--text-tertiary)] mt-2 text-center">Попробуйте изменить параметры поиска</p>
                 </div>
               ) : (
                 <>
-                  <div className={`pb-16 ${
-                    viewMode === 'cards' 
-                      ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
-                      : 'space-y-4'
-                  }`}>
+                  <div className="pb-16 space-y-4">
                     {paginatedNews.map((news, index) => (
                       <div
                         key={news.id}
@@ -138,17 +138,15 @@ function App() {
                       >
                         <NewsCard 
                           news={news} 
-                          onOpenModal={handleOpenModal}
-                          viewMode={viewMode}
                         />
                       </div>
                     ))}
                     
-                    {/* Невидимые ячейки-заглушки для заполнения пустого места (только для списка) */}
-                    {viewMode === 'list' && Array.from({ length: Math.max(0, 5 - paginatedNews.length) }).map((_, index) => (
+                    {/* Невидимые ячейки-заглушки для заполнения пустого места */}
+                    {Array.from({ length: Math.max(0, 5 - paginatedNews.length) }).map((_, index) => (
                       <div
                         key={`placeholder-${index}`}
-                        className="h-28 opacity-0 pointer-events-none mb-4"
+                        className="h-36 opacity-0 pointer-events-none mb-4"
                       />
                     ))}
                   </div>
@@ -168,13 +166,6 @@ function App() {
           </div>
         </div>
       </div>
-
-      {/* News Modal */}
-      <NewsModal
-        news={selectedNews}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-      />
     </div>
   );
 }
@@ -188,4 +179,5 @@ function AppWithTheme() {
 }
 
 export default AppWithTheme;
+
 

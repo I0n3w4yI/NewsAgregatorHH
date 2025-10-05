@@ -1,13 +1,12 @@
 import { NewsItem } from '../types/news';
-import { ViewMode } from './ViewToggle';
+import { capitalizeFirstLetter } from '../utils/newsTransform';
+import { HtmlRenderer } from './HtmlRenderer';
 
 interface NewsCardProps {
   news: NewsItem;
-  onOpenModal: (news: NewsItem) => void;
-  viewMode: ViewMode;
 }
 
-export function NewsCard({ news, onOpenModal, viewMode }: NewsCardProps) {
+export function NewsCard({ news }: NewsCardProps) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -32,68 +31,19 @@ export function NewsCard({ news, onOpenModal, viewMode }: NewsCardProps) {
     });
   };
 
-  if (viewMode === 'cards') {
-    return (
-      <button
-        onClick={() => onOpenModal(news)}
-        className="w-full text-left group"
-      >
-        <div className="bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-lg p-3 transition-all duration-300 hover:border-[var(--border-tertiary)] hover:shadow-lg hover:shadow-gray-800/50 hover:translate-y-[-1px] h-40 flex flex-col">
-          <div className="flex items-start justify-between gap-3 flex-1">
-            <div className="flex-1 min-w-0 flex flex-col">
-              <div className="flex items-center gap-2 mb-2 h-5">
-                <span className="text-[var(--text-secondary)] font-semibold text-sm truncate">
-                  {news.category}
-                </span>
-                {news.subcategory && (
-                  <>
-                    <span className="text-[var(--text-tertiary)]">•</span>
-                    <span className="text-[var(--text-tertiary)] text-xs truncate">
-                      {news.subcategory}
-                    </span>
-                  </>
-                )}
-                <span className="text-[var(--text-tertiary)] text-xs ml-auto flex-shrink-0">
-                  {formatDate(news.date)}
-                </span>
-              </div>
-
-              <h3 className="text-[var(--text-primary)] font-semibold text-lg mb-1 line-clamp-1">
-                {news.title}
-              </h3>
-
-              <p className="text-[var(--text-secondary)] text-sm leading-relaxed flex-1 overflow-hidden" style={{
-                display: '-webkit-box',
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: 'vertical',
-                lineHeight: '1.4',
-                textOverflow: 'ellipsis'
-              }}>
-                {news.text}
-              </p>
-
-              <div className="mt-2 text-[var(--text-tertiary)] text-xs truncate">
-                {news.author}
-              </div>
-            </div>
-          </div>
-        </div>
-      </button>
-    );
-  }
-
-  // List view (original compact design)
   return (
-    <button
-      onClick={() => onOpenModal(news)}
-      className="w-full text-left group"
+    <a
+      href={news.sourceUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="w-full text-left group block"
     >
-      <div className="bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-lg p-3 transition-all duration-300 hover:border-[var(--border-tertiary)] hover:shadow-lg hover:shadow-gray-800/50 hover:translate-y-[-1px] h-28 flex flex-col">
+      <div className="bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-lg px-3 pt-3 pb-2 transition-all duration-300 hover:border-[var(--border-tertiary)] hover:shadow-lg hover:shadow-gray-800/50 hover:translate-y-[-1px] h-36 flex flex-col">
         <div className="flex items-start justify-between gap-4 flex-1">
           <div className="flex-1 min-w-0 flex flex-col">
             <div className="flex items-center gap-2 mb-1 h-5">
               <span className="text-[var(--text-secondary)] font-semibold text-sm">
-                {news.category}
+                {capitalizeFirstLetter(news.category)}
               </span>
               {news.subcategory && (
                 <>
@@ -108,19 +58,23 @@ export function NewsCard({ news, onOpenModal, viewMode }: NewsCardProps) {
               </span>
             </div>
 
-            <p className="text-[var(--text-secondary)] text-base leading-relaxed flex-1 overflow-hidden" style={{
+            <div className="text-[var(--text-secondary)] text-base leading-relaxed flex-1 overflow-hidden" style={{
               display: '-webkit-box',
-              WebkitLineClamp: 2,
+              WebkitLineClamp: 4,
               WebkitBoxOrient: 'vertical',
-              lineHeight: '1.5',
+              lineHeight: '1.4',
               textOverflow: 'ellipsis'
             }}>
-              {news.text}
-            </p>
+              <HtmlRenderer 
+                html={news.text} 
+                maxLength={300}
+                showImages={false}
+              />
+            </div>
           </div>
         </div>
       </div>
-    </button>
+    </a>
   );
 }
 

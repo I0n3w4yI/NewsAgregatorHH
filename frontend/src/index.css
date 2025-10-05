@@ -58,3 +58,115 @@
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
+/* HTML content styles */
+.html-content {
+  line-height: 1.6;
+}
+
+.html-content p {
+  margin-bottom: 1.5rem;
+  margin-top: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.html-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1rem 0;
+  display: block;
+}
+
+.html-content strong,
+.html-content b {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.html-content em,
+.html-content i {
+  font-style: italic;
+}
+
+.html-content a {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--border-tertiary);
+}
+
+.html-content a:hover {
+  text-decoration-color: var(--text-primary);
+}
+
+.html-content ul,
+.html-content ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.html-content li {
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.html-content h1,
+.html-content h2,
+.html-content h3,
+.html-content h4,
+.html-content h5,
+.html-content h6 {
+  margin: 1.5rem 0 1rem 0;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.html-content h1 {
+  font-size: 1.5rem;
+}
+
+.html-content h2 {
+  font-size: 1.25rem;
+}
+
+.html-content h3 {
+  font-size: 1.125rem;
+}
+
+.html-content blockquote {
+  border-left: 4px solid var(--border-tertiary);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: var(--text-tertiary);
+}
+
+.html-content code {
+  background-color: var(--bg-tertiary);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.html-content pre {
+  background-color: var(--bg-tertiary);
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.html-content pre code {
+  background: none;
+  padding: 0;
+}
+
+/* Стили для переносов строк */
+.html-content br {
+  display: block;
+  margin: 0.5rem 0;
+  content: "";
+}
+

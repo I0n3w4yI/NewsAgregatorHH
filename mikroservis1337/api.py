@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict, Optional
 import yaml
 import logging
+import asyncio
 from pathlib import Path
 import json
 from datetime import datetime
@@ -118,7 +119,7 @@ def load_cached_news():
         return None
 
 
-def update_news_background():
+async def update_news_background():
     try:
         news_cache['is_updating'] = True
         logger.info("Начало обновления новостей...")
@@ -135,10 +136,10 @@ def update_news_background():
         all_news = parser.get_all_news_flat(news_by_category)
         
         # Суммаризация
-        summarized_news = summarizer.summarize_all_news(all_news)
+        summarized_news = await summarizer.summarize_all_news(all_news)
         
         # Выбор топ-новостей
-        top_news = summarizer.select_top_news(
+        top_news = await summarizer.select_top_news(
             summarized_news,
             top_count=config['news']['top_news_count']
         )
@@ -219,9 +220,11 @@ async def get_all_news(limit: Optional[int] = None, offset: int = 0):
     else:
         news = news[offset:]
     
+    total_count = len(news_cache['all_news']) if news_cache['all_news'] and not asyncio.iscoroutine(news_cache['all_news']) else 0
+    
     return NewsResponse(
         news=news,
-        total=len(news_cache['all_news']),
+        total=total_count,
         last_update=news_cache['last_update']
     )
 
@@ -302,8 +305,10 @@ async def get_stats():
         for category, news in news_cache['news_by_category'].items()
     }
     
+    total_news_count = len(news_cache['all_news']) if news_cache['all_news'] and not asyncio.iscoroutine(news_cache['all_news']) else 0
+    
     return StatsResponse(
-        total_news=len(news_cache['all_news']),
+        total_news=total_news_count,
         categories_count=len(news_cache['news_by_category']),
         sources_count=sources_count,
         last_update=news_cache['last_update'],
@@ -330,11 +335,15 @@ async def update_news(background_tasks: BackgroundTasks):
 
 @app.get("/health", tags=["Health"])
 async def health_check():
+    cached_news_count = 0
+    if news_cache['all_news'] and not asyncio.iscoroutine(news_cache['all_news']):
+        cached_news_count = len(news_cache['all_news'])
+    
     return {
         "status": "healthy",
         "is_updating": news_cache['is_updating'],
         "last_update": news_cache['last_update'],
-        "cached_news": len(news_cache['all_news'])
+        "cached_news": cached_news_count
     }
 
 
