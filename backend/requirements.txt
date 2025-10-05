@@ -1,0 +1,15 @@
+# Основные зависимости для News Aggregator Backend
+# FastAPI и веб-сервер
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.0.0
+
+# RSS парсинг
+feedparser>=6.0.10
+
+# Конфигурация и переменные окружения
+pyyaml>=6.0.1
+python-dotenv>=1.0.0
+
+# OpenAI API для суммаризации и перевода
+openai>=1.0.0
