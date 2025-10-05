@@ -4,7 +4,7 @@
 
 import { ApiNewsItem, ApiNewsResponse, ApiCategoryResponse, ApiStatsResponse } from '../types/news';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 class ApiService {
   private baseUrl: string;
