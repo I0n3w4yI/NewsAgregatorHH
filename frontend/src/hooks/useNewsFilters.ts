@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react';
 import { NewsItem, FilterState } from '../types/news';
 import { categoriesData } from '../types/categories';
+import { ViewMode } from '../components/ViewToggle';
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE_LIST = 5;
+const ITEMS_PER_PAGE_CARDS = 9;
 
-export function useNewsFilters(newsData: NewsItem[]) {
+export function useNewsFilters(newsData: NewsItem[], viewMode: ViewMode = 'list') {
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: '',
     selectedCategories: [],
@@ -27,14 +29,31 @@ export function useNewsFilters(newsData: NewsItem[]) {
       );
     }
 
-    if (filters.selectedCategories.length > 0) {
-      result = result.filter((item) => filters.selectedCategories.includes(item.category));
-    }
-
-    if (filters.selectedSubcategories.length > 0) {
-      result = result.filter(
-        (item) => item.subcategory && filters.selectedSubcategories.includes(item.subcategory)
-      );
+    // Фильтрация по категориям и подкатегориям
+    if (filters.selectedCategories.length > 0 || filters.selectedSubcategories.length > 0) {
+      result = result.filter((item) => {
+        // Если выбраны и категории, и подкатегории, показываем новости, которые соответствуют ЛЮБОМУ из фильтров
+        if (filters.selectedCategories.length > 0 && filters.selectedSubcategories.length > 0) {
+          // Проверяем, соответствует ли новость выбранной категории
+          const matchesCategory = filters.selectedCategories.includes(item.category);
+          // Проверяем, соответствует ли новость выбранной подкатегории
+          const matchesSubcategory = item.subcategory && filters.selectedSubcategories.includes(item.subcategory);
+          
+          return matchesCategory || matchesSubcategory;
+        }
+        
+        // Если выбраны только категории
+        if (filters.selectedCategories.length > 0) {
+          return filters.selectedCategories.includes(item.category);
+        }
+        
+        // Если выбраны только подкатегории
+        if (filters.selectedSubcategories.length > 0) {
+          return item.subcategory && filters.selectedSubcategories.includes(item.subcategory);
+        }
+        
+        return true;
+      });
     }
 
     if (filters.todayOnly) {
@@ -56,13 +75,14 @@ export function useNewsFilters(newsData: NewsItem[]) {
     return result;
   }, [newsData, filters]);
 
-  const totalPages = Math.ceil(filteredNews.length / ITEMS_PER_PAGE);
+  const itemsPerPage = viewMode === 'cards' ? ITEMS_PER_PAGE_CARDS : ITEMS_PER_PAGE_LIST;
+  const totalPages = Math.ceil(filteredNews.length / itemsPerPage);
 
   const paginatedNews = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
     return filteredNews.slice(startIndex, endIndex);
-  }, [filteredNews, currentPage]);
+  }, [filteredNews, currentPage, itemsPerPage]);
 
   const handleFiltersChange = (newFilters: FilterState) => {
     setFilters(newFilters);

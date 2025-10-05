@@ -16,8 +16,7 @@ export const categoriesData: CategoryStructure[] = [
       'Биатлон',
       'Лыжи',
       'Фигурное катание',
-      'Волейбол',
-      'Киберспорт'
+      'Волейбол'
     ]
   },
   {

@@ -39,7 +39,7 @@ export function RefreshDropdown({ value, onChange, timeUntilRefresh, isRefreshin
       {onManualRefresh && (
         <button
           onClick={onManualRefresh}
-          className="flex items-center gap-2 px-3 py-2 bg-[#1a1a1a] text-gray-300 hover:text-white border border-gray-700 rounded-lg text-sm font-medium transition-colors"
+          className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-secondary)] rounded-lg text-sm font-medium transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           <span>Обновить</span>
@@ -50,7 +50,7 @@ export function RefreshDropdown({ value, onChange, timeUntilRefresh, isRefreshin
       <div className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-3 py-2 bg-[#1a1a1a] text-gray-300 hover:text-white border border-gray-700 rounded-lg text-sm font-medium transition-colors"
+          className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-secondary)] rounded-lg text-sm font-medium transition-colors"
         >
           <span>{getDisplayText()}</span>
           <ChevronDown 
@@ -69,15 +69,15 @@ export function RefreshDropdown({ value, onChange, timeUntilRefresh, isRefreshin
           />
           
           {/* Dropdown menu */}
-          <div className="absolute top-full left-0 mt-1 w-full bg-[#1a1a1a] border border-gray-700 rounded-lg shadow-lg z-20 overflow-hidden">
+          <div className="absolute top-full left-0 mt-1 w-full bg-[var(--bg-secondary)] border border-[var(--border-secondary)] rounded-lg shadow-lg z-20 overflow-hidden">
             {refreshOptions.map((option) => (
               <button
                 key={option.value || 'off'}
-                onClick={() => handleSelect(option.value)}
+                onClick={() => handleSelect(option.value as 10 | 30 | 60 | null)}
                 className={`w-full text-left px-3 py-2 text-sm transition-colors ${
                   value === option.value
                     ? 'bg-gray-200 text-[#101010] font-medium'
-                    : 'text-gray-300 hover:text-white hover:bg-[#222]'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
                 }`}
               >
                 {option.label}

@@ -1,16 +1,25 @@
-import { Newspaper, RefreshCw } from 'lucide-react';
+import { Newspaper } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { NewsCard } from './components/NewsCard';
 import { NewsFilters } from './components/NewsFilters';
 import { NewsModal } from './components/NewsModal';
 import { Pagination } from './components/Pagination';
 import { RefreshDropdown } from './components/RefreshDropdown';
+import { ViewToggle, ViewMode } from './components/ViewToggle';
+import { ThemeToggle } from './components/ThemeToggle';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { useNewsFilters } from './hooks/useNewsFilters';
 import { useAutoRefresh } from './hooks/useAutoRefresh';
 import { mockNewsData } from './data/mockData';
 import { NewsItem } from './types/news';
 
 function App() {
+  const { theme, setTheme } = useTheme();
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+
   const {
     filters,
     onFiltersChange,
@@ -21,11 +30,7 @@ function App() {
     onPageChange,
     onRefresh,
     totalResults
-  } = useNewsFilters(mockNewsData);
-
-  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+  } = useNewsFilters(mockNewsData, viewMode);
 
   const handleOpenModal = (news: NewsItem) => {
     setSelectedNews(news);
@@ -62,28 +67,36 @@ function App() {
   });
 
   return (
-    <div className="min-h-screen bg-[#101010] flex flex-col">
+    <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col">
-        <div className="max-w-7xl mx-auto flex-1 flex flex-col">
+        <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <Newspaper className="w-10 h-10 text-white" />
-              <h1 className="text-4xl font-bold text-white">Новости</h1>
+              <Newspaper className="w-10 h-10 text-[var(--text-primary)]" />
+              <h1 className="text-4xl font-bold text-[var(--text-primary)]">Новости</h1>
             </div>
             
-            {/* Refresh controls */}
+            {/* Controls */}
             <div className="flex items-center gap-4">
-            <RefreshDropdown
-              value={filters.refreshInterval}
-              onChange={(value) => onFiltersChange({ ...filters, refreshInterval: value })}
-              timeUntilRefresh={timeUntilRefresh}
-              isRefreshing={isRefreshing}
-              onManualRefresh={onRefresh}
-            />
+              <ThemeToggle
+                currentTheme={theme}
+                onThemeChange={setTheme}
+              />
+              <ViewToggle
+                currentView={viewMode}
+                onViewChange={setViewMode}
+              />
+              <RefreshDropdown
+                value={filters.refreshInterval}
+                onChange={(value) => onFiltersChange({ ...filters, refreshInterval: value })}
+                timeUntilRefresh={timeUntilRefresh}
+                isRefreshing={isRefreshing}
+                onManualRefresh={onRefresh}
+              />
             </div>
           </div>
 
-          <div className="flex gap-6 items-start justify-center flex-1">
+          <div className="flex gap-6 items-start justify-start flex-1">
             <aside className="w-80 flex-shrink-0">
               <NewsFilters
                 filters={filters}
@@ -92,19 +105,23 @@ function App() {
               />
             </aside>
 
-            <main className="flex-1 min-w-0 max-w-4xl relative">
-              <div className="mb-3 text-gray-400 text-sm mt-3">
+            <main className="flex-1 min-w-0 relative">
+              <div className="mb-3 text-[var(--text-tertiary)] text-sm mt-3">
                 Найдено новостей: {totalResults}
               </div>
 
               {paginatedNews.length === 0 ? (
-                <div className="text-center py-16">
-                  <p className="text-gray-400 text-lg">Новости не найдены</p>
-                  <p className="text-gray-500 mt-2">Попробуйте изменить параметры поиска</p>
+                <div className="flex flex-col items-center justify-center py-16 min-h-[600px]">
+                  <p className="text-[var(--text-tertiary)] text-lg text-center">Новости не найдены</p>
+                  <p className="text-[var(--text-tertiary)] mt-2 text-center">Попробуйте изменить параметры поиска</p>
                 </div>
               ) : (
                 <>
-                  <div className="space-y-4 pb-16">
+                  <div className={`pb-16 ${
+                    viewMode === 'cards' 
+                      ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+                      : 'space-y-4'
+                  }`}>
                     {paginatedNews.map((news, index) => (
                       <div
                         key={news.id}
@@ -122,15 +139,16 @@ function App() {
                         <NewsCard 
                           news={news} 
                           onOpenModal={handleOpenModal}
+                          viewMode={viewMode}
                         />
                       </div>
                     ))}
                     
-                    {/* Невидимые ячейки-заглушки для заполнения пустого места */}
-                    {Array.from({ length: Math.max(0, 5 - paginatedNews.length) }).map((_, index) => (
+                    {/* Невидимые ячейки-заглушки для заполнения пустого места (только для списка) */}
+                    {viewMode === 'list' && Array.from({ length: Math.max(0, 5 - paginatedNews.length) }).map((_, index) => (
                       <div
                         key={`placeholder-${index}`}
-                        className="h-32 opacity-0 pointer-events-none"
+                        className="h-28 opacity-0 pointer-events-none mb-4"
                       />
                     ))}
                   </div>
@@ -161,5 +179,13 @@ function App() {
   );
 }
 
-export default App;
+function AppWithTheme() {
+  return (
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
+  );
+}
+
+export default AppWithTheme;
 
