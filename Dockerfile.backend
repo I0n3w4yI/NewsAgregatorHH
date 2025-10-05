@@ -8,12 +8,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Устанавливаем зависимости
-COPY mikroservis1337/requirements.txt ./requirements.txt
+COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir --upgrade pip \
 	&& pip install --no-cache-dir -r requirements.txt
 
 # Копируем исходники сервиса
-COPY mikroservis1337 /app
+COPY backend /app
 
 # Создаем непривилегированного пользователя
 RUN useradd --create-home --uid 1000 appuser \

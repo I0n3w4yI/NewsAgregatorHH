@@ -24,13 +24,13 @@ jobs:
 					python-version: ${{ env.PYTHON_VERSION }}
 
 			- name: Install backend dependencies
-				working-directory: mikroservis1337
+				working-directory: backend
 				run: |
 					python -m pip install --upgrade pip
 					pip install --no-cache-dir -r requirements.txt
 
 			- name: Backend syntax check
-				working-directory: mikroservis1337
+				working-directory: backend
 				run: python -m compileall .
 
 			- name: Set up Node.js

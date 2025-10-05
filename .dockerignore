@@ -6,5 +6,5 @@
 **/.pytest_cache/
 frontend/node_modules
 frontend/dist
-mikroservis1337/.venv
-mikroservis1337/output
+backend/.venv
+backend/output
