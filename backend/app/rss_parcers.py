@@ -2,6 +2,7 @@ import aiohttp
 import asyncio
 import feedparser
 from datetime import datetime
+import pandas as pd
 
 
 async def fetch_feed(session, url):
@@ -20,6 +21,10 @@ async def fetch_feed(session, url):
 
 
 async def process_feeds_simple(feed_urls):
+    """
+    Обработка rss и создание массива со статьями
+    """
+
     async with aiohttp.ClientSession() as session:
         tasks = [fetch_feed(session, url) for url in feed_urls]
         results = await asyncio.gather(*tasks)
@@ -48,9 +53,25 @@ async def main():
 
     for article in articles[:3]:
         print(f"{article['title']}\n{article['link']}")
+    
+    df = pd.DataFrame(articles)
+    df['published'] = pd.to_datetime(df['published'].apply(
+        lambda x: datetime.strptime(
+            x.replace("GMT", "+0000"),
+            "%a, %d %b %Y %H:%M:%S %z")
+        ),
+        utc=True
+    )
+
+    print(df[df['published'] >= pd.Timestamp('2025-10-02 00:00:00', tz='UTC')])
 
 
 def read_rss():
+    """
+    Читаем rss ссылки с файла links.txt
+    """
+
+
     with open('links.txt') as file:
         feeds = [line.strip() for line in file if line.strip()]
         return feeds
